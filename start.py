@@ -325,7 +325,7 @@ def getMessage():
 @server.route("/")
 def webhook():
     bot.remove_webhook()
-    bot.set_webhook(url='https://your_heroku_project.com/' + config.TOKEN)
+    bot.set_webhook(url='https://git.heroku.com/englishtrainspoting.git/' + config.TOKEN)
     return "!", 200
 
 
