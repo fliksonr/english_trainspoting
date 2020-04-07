@@ -312,7 +312,5 @@ def getWordTranslation(key: str) -> str:
         print('Error!' + str(auth.status_code))
 
 
-
-
 # RUN
 bot.polling(none_stop=True)
