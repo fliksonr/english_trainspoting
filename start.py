@@ -16,7 +16,7 @@ bot = telebot.TeleBot(config.TOKEN)
 server = Flask(__name__)
 
 # client = MongoClient('localhost', 27017)
-client = MongoClient("mongodb://admin:Qa23988798@ds038547.mlab.com:38547/english_trainspoting")
+client = MongoClient(config.DB_CLIENT)
 db = client['english_trainspoting']
 usersCollection = db['users']
 videoCollection = db['video_to_listen']
@@ -26,8 +26,9 @@ phraseCollection = db['make_phrase']
 
 URL_AUTH = 'https://developers.lingvolive.com/api/v1.1/authenticate'
 URL_TRANSLATE = 'https://developers.lingvolive.com/api/v1/Minicard'
+
+
 # URL_TRANSLATE = 'https://developers.lingvolive.com/api/v1/Translation'
-KEY = 'ZjEyZDRlNjgtYzczZC00ZDRjLWE4ZWQtMzY1ODkzNTM2OTU1OjI1OGJjZDA4ZTFiNTRhMGU5ZGJkODA3Y2FkMTUxNmFi'
 
 
 @bot.message_handler(commands=['filltheform'])
@@ -69,6 +70,7 @@ def welcome(message):
     print(ord("❶"))
     print(chr(10105))
     print(ord("а"))
+    pprint.pprint(os.environ.keys())
 
     userDataDB = usersCollection.find_one({"id": str(message.from_user.id)})
     username_from_message = message.from_user.first_name
@@ -78,8 +80,8 @@ def welcome(message):
     else:
         addNewUserToDB(message)
         msg = "Рад познакомиться, " + str(username_from_message) + \
-              "Я - <b>{0.first_name}</b>, бот созданный помочь развить Ваш навык английского языка "\
-              "\nИспользуйте кнопки внизу (или нажмите на квадрат с квадратиками) для перемещения. "\
+              "Я - <b>{0.first_name}</b>, бот созданный помочь развить Ваш навык английского языка " \
+              "\nИспользуйте кнопки внизу (или нажмите на квадрат с квадратиками) для перемещения. " \
 
     bot.send_message(message.chat.id, msg.format(bot.get_me()), parse_mode='html')
 
@@ -92,13 +94,15 @@ def mainMenuInit(message):
     item2 = types.KeyboardButton("😊 Как дела?")
     videoListening = types.KeyboardButton("О чем они говорят? 🤔")
     # main_screen_markup.row("🎲 Рандомное число", "😊 Как дела?")
-    main_screen_markup.add("🎲 Рандомное число", "😊 Как дела?", "О чем они говорят? 🤔", "Составь ______ на английском")
+    main_screen_markup.add("🎲 Рандомное число", "😊 Как дела?", "О чем они говорят? 🤔",
+                           "Составь ______ на английском")
 
     bot.send_message(message.chat.id, "Главное меню ⬇️⬇️⬇️", parse_mode='html', reply_markup=main_screen_markup)
 
 
 @bot.message_handler(content_types=['text', 'video'])
 def mainScreenResponse(message):
+    print(message)
     print(str(message.from_user.first_name) + " " + str(message.from_user.last_name) + ": " + str(message.text))
     global videoRightAnswer, userCountryAccent, phraseBlankMessage, userPhraseItemChoice, makePhraseInlineMarkup
     if message.chat.type == 'private':
@@ -115,16 +119,18 @@ def mainScreenResponse(message):
         elif message.text == "На главную 🏠":
             mainMenuInit(message)
 
-        elif message.text == "Составь ______ на английском":
+        elif message.text == "Составь ______ на английском" or message.text == "Еще фраз! 📝":
             makePhrase(message)
 
         elif message.text == "О чем они говорят? 🤔":
             countryAccentMarkup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
             countryAccentMarkup.row("Британский 🇬🇧", "Американский 🇺🇸")
-            bot.send_message(message.chat.id, "С каким акцентом вы бы хотели сдружиться?", reply_markup=countryAccentMarkup)
+            bot.send_message(message.chat.id, "С каким акцентом вы бы хотели сдружиться?",
+                             reply_markup=countryAccentMarkup)
             videoRightAnswer = ""
 
-        elif (message.text == "Британский 🇬🇧") or (message.text == "Американский 🇺🇸") or (message.text == "Еще разговоров! 🤐"):
+        elif (message.text == "Британский 🇬🇧") or (message.text == "Американский 🇺🇸") or (
+                message.text == "Еще разговоров! 🤐"):
 
             if message.text == "Британский 🇬🇧":
                 userCountryAccent = "British"
@@ -155,13 +161,15 @@ def callback_inline(call):
                 bot.send_message(call.message.chat.id, 'Вот и отличненько 😊')
             elif call.data == 'bad':
                 bot.send_message(call.message.chat.id, 'Бывает 😢')
+
             elif call.data[0:11] == "phrase_word":
                 global phraseBlankMessage, phraseEditedMessage, makePhraseInlineMarkup, phraseAnswer
                 userPhraseChoice = call.data[12:]
                 if userPhraseChoice == "✅":
-                    print("Confirm")
+                    print("Confirm" + str(userPhraseChoice))
                     print(phraseEditedMessage)
                     print(phraseAnswer)
+                    userPhraseChoice = ""
                     if str(phraseEditedMessage) == str(phraseAnswer):
                         msg = "Да, вы абсолютно правы!"
                     else:
@@ -178,7 +186,7 @@ def callback_inline(call):
                                           text=phraseEditedMessage,
                                           reply_markup=makePhraseInlineMarkup)
                 else:
-                    print(userPhraseChoice)
+                    print("userPhraseChoice: "+ str(userPhraseChoice))
                     phraseEditedMessage = phraseEditedMessage.replace("___", userPhraseChoice, 1)
                     print(phraseEditedMessage)
                     # print(bot.chosen_inline_handlers)
@@ -220,17 +228,19 @@ def makePhrase(message):
     phraseBlankMessage = ""
     callbackData = "phrase_word:"
     for elem in answersMass:
-        userPhraseItemChoice = types.InlineKeyboardButton(elem, callback_data=callbackData+elem)
+        userPhraseItemChoice = types.InlineKeyboardButton(elem, callback_data=callbackData + elem)
         makePhraseInlineMarkup.add(userPhraseItemChoice)
         phraseBlankMessage += "___ "
 
-    makePhraseInlineMarkup.row(types.InlineKeyboardButton("❌", callback_data=callbackData+"❌"),
-                               types.InlineKeyboardButton("✅", callback_data=callbackData+"✅"))
+    makePhraseInlineMarkup.row(types.InlineKeyboardButton("✅", callback_data=callbackData + "✅"),
+                               types.InlineKeyboardButton("❌", callback_data=callbackData + "❌"))
     phraseEditedMessage = phraseBlankMessage
 
-    bot.send_message(message.chat.id, phraseQuestion)
-    bot.send_message(message.chat.id, phraseBlankMessage, reply_markup=makePhraseInlineMarkup)
+    makePhraseMarkup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=3)
+    makePhraseMarkup.add("Еще фраз! 📝", "На главную 🏠")
 
+    bot.send_message(message.chat.id, phraseQuestion, reply_markup=makePhraseMarkup)
+    bot.send_message(message.chat.id, phraseBlankMessage, reply_markup=makePhraseInlineMarkup)
 
 
 def videoListening(message, userCountryAccent):
@@ -263,7 +273,6 @@ def videoListening(message, userCountryAccent):
             rightAnswer = chr(10102 + i) + " " + rightAnswer
         videoListenMarkup.add(videoItem)
 
-
     video = types.Video(videoFileId, 1280, 720, duration=60)
     videoListenMarkup.add("Еще разговоров! 🤐", "На главную 🏠")
 
@@ -275,7 +284,7 @@ def videoListening(message, userCountryAccent):
 
 
 def getWordTranslation(key: str) -> str:
-    headers_auth = {'Authorization': 'Basic ' + KEY}
+    headers_auth = {'Authorization': 'Basic ' + config.ABBYY_KEY}
     auth = requests.post(URL_AUTH, headers=headers_auth)
     if auth.status_code == 200:
         token = auth.text
@@ -316,21 +325,24 @@ def getWordTranslation(key: str) -> str:
         print('Error!' + str(auth.status_code))
 
 
-@server.route('/' + config.TOKEN, methods=['POST'])
-def getMessage():
-    bot.process_new_updates([telebot.types.Update.de_json(request.stream.read().decode("utf-8"))])
-    return "!", 200
+if "HEROKU" in list(os.environ.keys()):
+    # Для запуска на сервере
+    @server.route('/' + config.TOKEN, methods=['POST'])
+    def getMessage():
+        bot.process_new_updates([telebot.types.Update.de_json(request.stream.read().decode("utf-8"))])
+        return "!", 200
 
 
-@server.route("/")
-def webhook():
+    @server.route("/")
+    def webhook():
+        bot.remove_webhook()
+        bot.set_webhook(url='https://englishtrainspoting.herokuapp.com/' + config.TOKEN)
+        return "!", 200
+
+
+    if __name__ == "__main__":
+        server.run(host="0.0.0.0", port=int(os.environ.get('PORT', 5000)))
+else:
+    # Для локального запуска
     bot.remove_webhook()
-    bot.set_webhook(url='https://englishtrainspoting.herokuapp.com/' + config.TOKEN)
-    return "!", 200
-
-
-if __name__ == "__main__":
-    server.run(host="0.0.0.0", port=int(os.environ.get('PORT', 5000)))
-
-# RUN
-# bot.polling(none_stop=True)
+    bot.polling(none_stop=True)
