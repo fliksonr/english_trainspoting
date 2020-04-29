@@ -84,7 +84,7 @@ def welcome(message):
               "\nИспользуйте кнопки внизу (или нажмите на квадрат с квадратиками) для перемещения. " \
 
     bot.send_message(message.chat.id, msg.format(bot.get_me()), parse_mode='html')
-
+    mainMenuInit(message)
 
 def mainMenuInit(message):
     # keyboard
@@ -124,7 +124,7 @@ def mainScreenResponse(message):
 
         elif message.text == "О чем они говорят? 🤔":
             countryAccentMarkup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
-            countryAccentMarkup.row("Британский 🇬🇧", "Американский 🇺🇸")
+            countryAccentMarkup.row("Британский 🇬🇧", "Американский 🇺🇸", "На главную 🏠")
             bot.send_message(message.chat.id, "С каким акцентом вы бы хотели сдружиться?",
                              reply_markup=countryAccentMarkup)
             videoRightAnswer = ""
