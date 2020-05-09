@@ -57,7 +57,7 @@ def addNewUserToDB(message):
             "id": str(message.from_user.id),
             "username": message.from_user.first_name,
             "current_video_id": 0,
-            "video_listen_right_answers": 0
+            "video_listen_right_answers": 0,
         }
     )
     new_user = username_db = usersCollection.find_one({"id": str(message.from_user.id)})
