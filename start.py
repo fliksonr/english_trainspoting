@@ -16,8 +16,10 @@ bot = telebot.TeleBot(config.TOKEN)
 server = Flask(__name__)
 
 # client = MongoClient('localhost', 27017)
-client = MongoClient(config.DB_CLIENT)
+client = MongoClient(config.DB_CLIENT, retryWrites=False)
 db = client['english_trainspoting']
+# db = client['heroku_jq9wgddb']
+
 usersCollection = db['users']
 videoCollection = db['video_to_listen']
 phraseCollection = db['make_phrase']
@@ -80,7 +82,7 @@ def welcome(message):
     else:
         addNewUserToDB(message)
         msg = "Рад познакомиться, " + str(username_from_message) + \
-              "Я - <b>{0.first_name}</b>, бот созданный помочь развить Ваш навык английского языка " \
+              "\nЯ - <b>{0.first_name}</b>, бот созданный помочь развить Ваш навык английского языка " \
               "\nИспользуйте кнопки внизу (или нажмите на квадрат с квадратиками) для перемещения. " \
 
     bot.send_message(message.chat.id, msg.format(bot.get_me()), parse_mode='html')
