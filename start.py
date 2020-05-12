@@ -75,6 +75,7 @@ def welcome(message):
     pprint.pprint(os.environ.keys())
 
     userDataDB = usersCollection.find_one({"id": str(message.from_user.id)})
+
     username_from_message = message.from_user.first_name
 
     if userDataDB:
