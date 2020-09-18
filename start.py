@@ -391,13 +391,6 @@ def userCurrentMakePhraseIdInc(message):
 
 
 def videoListening(message, userCountryAccent):
-    # bot.send_video(message.chat.id, "./videoClips/pulpFiction.mp4", timeout=50)
-    # Загрузка видео на сервер телеграм
-    # f = open('videoClips/pulpFictionProject.mp4', 'rb')
-    # msg = bot.send_video(message.chat.id, f, timeout=100)
-    # bot.send_message(message.chat.id, msg.video.file_id, reply_to_message_id=msg.message_id)
-
-    # Отправка видео пользователю
     videoCountsByCountry = videoCollection.count_documents(filter={"country_accent": str(userCountryAccent)})
 
     if userCountryAccent == "British":
