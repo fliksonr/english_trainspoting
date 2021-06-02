@@ -18,7 +18,7 @@ pytils==0.3
 requests==2.23.0
 selection==0.0.14
 six==1.14.0
-urllib3==1.25.8
+urllib3==1.26.5
 user-agent==0.1.9
 weblib==0.1.30
 Werkzeug==1.0.1
